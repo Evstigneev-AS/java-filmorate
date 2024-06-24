@@ -33,7 +33,7 @@ public class UserController {
         }
         if (emailToUserMap.containsKey(user.getEmail())) {
             log.error("Duplicate email found: {}", user.getEmail());
-            throw new DuplicatedDataException("Этот имейл уже используется");
+            throw new DuplicatedDataException("Эта электронная почта уже используется");
         }
         user.setId(getNextId());
         users.put(user.getId(), user);
@@ -57,7 +57,7 @@ public class UserController {
         if (newUser.getEmail() != null && !newUser.getEmail().equals(existingUser.getEmail())) {
             if (emailToUserMap.containsKey(newUser.getEmail())) {
                 log.error("Duplicate email found: {}", newUser.getEmail());
-                throw new DuplicatedDataException("Этот имейл уже используется");
+                throw new DuplicatedDataException("Эта электронная почта уже используется");
             }
             emailToUserMap.remove(existingUser.getEmail());
             existingUser.setEmail(newUser.getEmail());
