@@ -2,10 +2,6 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -14,6 +10,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -22,13 +19,25 @@ public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
     private final Map<String, User> emailToUserMap = new HashMap<>();
 
-    @GetMapping
     public Collection<User> findAll() {
         return users.values();
     }
 
-    @PostMapping
-    public User create(@RequestBody User user) {
+    public Optional<User> findById(long userId) {
+        if (users.containsKey(userId)) {
+            return Optional.of(users.get(userId));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public void remove(Long userId) {
+        User user = users.get(userId);
+        users.remove(userId, user);
+    }
+
+
+    public User create(User user) {
         log.info("Creating user with email: {}", user.getEmail());
         validateUser(user);
         if (user.getName() == null || user.getName().isBlank()) {
@@ -45,8 +54,7 @@ public class InMemoryUserStorage implements UserStorage {
         return user;
     }
 
-    @PutMapping
-    public User update(@RequestBody User newUser) {
+    public User update(User newUser) {
         log.info("Updating user with id: {}", newUser.getId());
         if (newUser.getId() == null) {
             log.error("User id is not specified");

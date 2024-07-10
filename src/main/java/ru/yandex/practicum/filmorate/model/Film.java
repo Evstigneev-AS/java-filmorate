@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Set;
 
 /**
  * Film.
@@ -20,6 +21,7 @@ public class Film {
     private LocalDate releaseDate;
     @JsonIgnore
     private Duration duration;
+    private Set<Long> laik;
 
     @JsonProperty("duration")
     public long getDurationInSeconds() {
