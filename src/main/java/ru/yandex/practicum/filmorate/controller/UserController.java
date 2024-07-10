@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
@@ -18,6 +19,17 @@ public class UserController {
     @Autowired
     public UserController(InMemoryUserStorage inMemoryUserStorage) {
         this.inMemoryUserStorage = inMemoryUserStorage;
+    }
+
+    @GetMapping("/{userId}")
+    public User findPost(@PathVariable("userId") Integer userId) {
+        return inMemoryUserStorage.findById(userId).orElseThrow(() ->
+                new ConditionsNotMetException("Указанный пост не найден"));
+    }
+
+    @DeleteMapping("/{userId}")
+    public void remove(@PathVariable("userId") long userId) {
+        inMemoryUserStorage.remove(userId);
     }
 
     @GetMapping
