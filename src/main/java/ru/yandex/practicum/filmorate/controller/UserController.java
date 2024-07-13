@@ -1,53 +1,70 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.service.UserService;
 
-import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private final InMemoryUserStorage inMemoryUserStorage;
+    private final UserService userService;
 
     @Autowired
-    public UserController(InMemoryUserStorage inMemoryUserStorage) {
-        this.inMemoryUserStorage = inMemoryUserStorage;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping("/{userId}")
-    public User findPost(@PathVariable("userId") Integer userId) {
-        return inMemoryUserStorage.findById(userId).orElseThrow(() ->
-                new ConditionsNotMetException("Указанный пост не найден"));
+    public ResponseEntity<User> findById(@PathVariable("userId") long userId) {
+        User user = userService.findById(userId);
+        return ResponseEntity.ok(user);
     }
 
     @DeleteMapping("/{userId}")
     public void remove(@PathVariable("userId") long userId) {
-        inMemoryUserStorage.remove(userId);
+        userService.remove(userId);
     }
 
     @GetMapping
-    public Collection<User> findAll() {
-        return inMemoryUserStorage.findAll();
+    public List<User> findAll() {
+        return userService.findAll();
     }
 
     @PostMapping
-    public User create(@RequestBody User user) {
-        return inMemoryUserStorage.create(user);
+    public User create(@RequestBody @Valid User user) {
+        return userService.create(user);
     }
 
     @PutMapping
-    public User update(@RequestBody User newUser) {
-        return inMemoryUserStorage.update(newUser);
+    public User update(@RequestBody @Valid User newUser) {
+        return userService.update(newUser);
     }
 
-    private void validateUser(User user) {
-        inMemoryUserStorage.validateUser(user);
+    @GetMapping("/{userId}/friends")
+    public List<User> findFriends(@PathVariable("userId") long userId) {
+        return userService.findFriends(userId);
+    }
+
+    @GetMapping("/{userId}/friends/common/{otherId}")
+    public List<User> findCommonFriends(@PathVariable("userId") long userId, @PathVariable("otherId") long otherId) {
+        return userService.findCommonFriends(userId, otherId);
+    }
+
+    @PutMapping("/{userId}/friends/{friendId}")
+    public User addFriend(@PathVariable("userId") Long userId, @PathVariable("friendId") Long friendId) {
+        return userService.addFriend(userId, friendId);
+    }
+
+    @DeleteMapping("/{userId}/friends/{friendId}")
+    public User removeFriend(@PathVariable("userId") long userId, @PathVariable("friendId") long friendId) {
+        return userService.removeFriend(userId, friendId);
     }
 }

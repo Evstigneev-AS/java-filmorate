@@ -2,8 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -14,14 +13,20 @@ import java.util.Set;
  */
 @Data
 @Builder(toBuilder = true)
+@EqualsAndHashCode(of = {"name", "releaseDate"})
 public class Film {
+
     private Long id;
     private String name;
     private String description;
     private LocalDate releaseDate;
-    @JsonIgnore
     private Duration duration;
-    private Set<Long> laik;
+    private Set<Long> likes;
+
+    @JsonIgnore
+    public int getLikesCount() {
+        return likes.size();
+    }
 
     @JsonProperty("duration")
     public long getDurationInSeconds() {
