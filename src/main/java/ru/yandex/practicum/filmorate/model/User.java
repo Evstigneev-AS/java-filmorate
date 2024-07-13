@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -11,7 +12,9 @@ import java.util.Set;
  */
 @Data
 @Builder(toBuilder = true)
+@EqualsAndHashCode(of = {"email"})
 public class User {
+
     private Long id;
     private String email;
     private String login;
