@@ -117,7 +117,7 @@ public class FilmService {
             }
 
             if (userStorage.findById(userId).isEmpty()) {
-                throw new NotFoundException("Пользователь не найден");
+                throw new NotFoundException("Пользователь c id:" + userId + " не найден");
             }
 
             Film film = filmOptional.get();
@@ -142,7 +142,7 @@ public class FilmService {
             }
 
             if (userStorage.findById(userId).isEmpty()) {
-                throw new NotFoundException("Пользователь не найден");
+                throw new NotFoundException("Пользователь c id:" + userId + " не найден");
             }
 
             Film film = filmOptional.get();
