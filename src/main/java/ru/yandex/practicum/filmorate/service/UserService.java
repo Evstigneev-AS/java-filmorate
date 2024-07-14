@@ -29,7 +29,7 @@ public class UserService {
     public User findById(long id) {
         Optional<User> userOptional = userStorage.findById(id);
         if (userOptional.isEmpty()) {
-            throw new NotFoundException("Пользователь не найден");
+            throw new NotFoundException("Пользователь c id:" + id + " не найден");
         }
         return userOptional.get();
     }
@@ -37,8 +37,9 @@ public class UserService {
     public User create(User user) {
         log.debug(LoggerMessagePattern.DEBUG, "create", user);
         try {
-            if (findUserByIdEmail(user.getEmail()).isPresent()) {
-                throw new DuplicatedDataException("Этот email уже используется");
+            String email = user.getEmail();
+            if (findUserByIdEmail(email).isPresent()) {
+                throw new DuplicatedDataException("Этот email:" + email + " уже используется");
             }
 
             if (user.getName() == null || user.getName().isBlank()) {
@@ -54,14 +55,16 @@ public class UserService {
     public User update(User newUser) {
         log.debug(LoggerMessagePattern.DEBUG, "update", newUser);
         try {
-            Optional<User> oldUserOptional = userStorage.findById(newUser.getId());
+            Long id = newUser.getId();
+            Optional<User> oldUserOptional = userStorage.findById(id);
             if (oldUserOptional.isEmpty()) {
-                throw new NotFoundException("Пользователь не найден");
+                throw new NotFoundException("Пользователь c id:" + id + " не найден");
             }
             fillEmptyFields(newUser, oldUserOptional.get());
+            String email = newUser.getEmail();
             Optional<User> userWithSameEmail = findUserByIdEmail(newUser.getEmail());
             if (userWithSameEmail.isPresent() && !Objects.equals(userWithSameEmail.get().getId(), newUser.getId())) {
-                throw new DuplicatedDataException("Этот email уже используется");
+                throw new DuplicatedDataException("Этот email:" + email + " уже используется");
             }
             return userStorage.update(newUser);
         } catch (Exception e) {
@@ -97,7 +100,7 @@ public class UserService {
         try {
             Optional<User> userOptional = userStorage.findById(id);
             if (userOptional.isEmpty()) {
-                throw new NotFoundException("Пользователь не найден");
+                throw new NotFoundException("Пользователь c id:" + id + " не найден");
             }
 
             Set<Long> friends = userOptional.get().getFriends();
@@ -115,7 +118,7 @@ public class UserService {
             Optional<User> userOptional1 = userStorage.findById(id1);
             Optional<User> userOptional2 = userStorage.findById(id2);
             if (userOptional1.isEmpty() || userOptional2.isEmpty()) {
-                throw new NotFoundException("Пользователь не найден");
+                throw new NotFoundException("Пользователи с id:" + id1 + ", " + id2 + " не найдены");
             }
 
             Set<Long> friends1 = userOptional1.get().getFriends();
@@ -141,7 +144,7 @@ public class UserService {
         log.debug(LoggerMessagePattern.DEBUG, "remove", "id=%d".formatted(id));
         try {
             if (userStorage.findById(id).isEmpty()) {
-                throw new NotFoundException("Пользователь не найден");
+                throw new NotFoundException("Пользователь c id:" + id + " не найден");
             }
             userStorage.remove(id);
         } catch (Exception e) {
@@ -157,7 +160,7 @@ public class UserService {
             Optional<User> userOptional = userStorage.findById(userId);
             Optional<User> friendOptional = userStorage.findById(friendId);
             if (userOptional.isEmpty() || friendOptional.isEmpty()) {
-                throw new NotFoundException("Пользователь не найден");
+                throw new NotFoundException("Пользователи с id:" + userId + ", " + friendId + " не найдены");
             }
 
             User user = userOptional.get();
@@ -185,7 +188,7 @@ public class UserService {
             Optional<User> userOptional = userStorage.findById(userId);
             Optional<User> friendOptional = userStorage.findById(friendId);
             if (userOptional.isEmpty() || friendOptional.isEmpty()) {
-                throw new NotFoundException("Пользователь не найден");
+                throw new NotFoundException("Пользователи с id:" + userId + ", " + friendId + " не найдены");
             }
 
             User user = userOptional.get();

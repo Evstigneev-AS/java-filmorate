@@ -22,14 +22,14 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<User> findById(@PathVariable("userId") long userId) {
+    @GetMapping("/{UserId}")
+    public ResponseEntity<User> findById(@PathVariable("UserId") long userId) {
         User user = userService.findById(userId);
         return ResponseEntity.ok(user);
     }
 
-    @DeleteMapping("/{userId}")
-    public void remove(@PathVariable("userId") long userId) {
+    @DeleteMapping("/{UserId}")
+    public void remove(@PathVariable("UserId") long userId) {
         userService.remove(userId);
     }
 
@@ -48,23 +48,23 @@ public class UserController {
         return userService.update(newUser);
     }
 
-    @GetMapping("/{userId}/friends")
-    public List<User> findFriends(@PathVariable("userId") long userId) {
+    @GetMapping("/{UserId}/friends")
+    public List<User> findFriends(@PathVariable("UserId") long userId) {
         return userService.findFriends(userId);
     }
 
-    @GetMapping("/{userId}/friends/common/{otherId}")
-    public List<User> findCommonFriends(@PathVariable("userId") long userId, @PathVariable("otherId") long otherId) {
+    @GetMapping("/{UserId}/friends/common/{OtherId}")
+    public List<User> findCommonFriends(@PathVariable("UserId") long userId, @PathVariable("OtherId") long otherId) {
         return userService.findCommonFriends(userId, otherId);
     }
 
-    @PutMapping("/{userId}/friends/{friendId}")
-    public User addFriend(@PathVariable("userId") Long userId, @PathVariable("friendId") Long friendId) {
+    @PutMapping("/{UserId}/friends/{FriendId}")
+    public User addFriend(@PathVariable("UserId") Long userId, @PathVariable("FriendId") Long friendId) {
         return userService.addFriend(userId, friendId);
     }
 
-    @DeleteMapping("/{userId}/friends/{friendId}")
-    public User removeFriend(@PathVariable("userId") long userId, @PathVariable("friendId") long friendId) {
+    @DeleteMapping("/{UserId}/friends/{FriendId}")
+    public User removeFriend(@PathVariable("UserId") long userId, @PathVariable("FriendId") long friendId) {
         return userService.removeFriend(userId, friendId);
     }
 }

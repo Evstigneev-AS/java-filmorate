@@ -20,8 +20,8 @@ public class FilmController {
         this.filmService = filmService;
     }
 
-    @GetMapping("/{filmId}")
-    public Film findFilm(@PathVariable("filmId") long filmId) {
+    @GetMapping("/{FilmId}")
+    public Film findFilm(@PathVariable("FilmId") long filmId) {
         return filmService.findById(filmId);
     }
 
@@ -45,18 +45,18 @@ public class FilmController {
         return filmService.update(newFilm);
     }
 
-    @DeleteMapping("/{filmId}")
-    public void remove(@PathVariable("filmId") long userId) {
+    @DeleteMapping("/{FilmId}")
+    public void remove(@PathVariable("FilmId") long userId) {
         filmService.remove(userId);
     }
 
-    @PutMapping("/{filmId}/like/{userId}")
-    public Film addLike(@PathVariable("filmId") long filmId, @PathVariable("userId") long userId) {
+    @PutMapping("/{FilmId}/like/{UserId}")
+    public Film addLike(@PathVariable("FilmId") long filmId, @PathVariable("UserId") long userId) {
         return filmService.addLike(filmId, userId);
     }
 
-    @DeleteMapping("/{filmId}/like/{userId}")
-    public Film removeLike(@PathVariable("filmId") long filmId, @PathVariable("userId") long userId) {
+    @DeleteMapping("/{FilmId}/like/{UserId}")
+    public Film removeLike(@PathVariable("FilmId") long filmId, @PathVariable("UserId") long userId) {
         return filmService.removeLike(filmId, userId);
     }
 }
