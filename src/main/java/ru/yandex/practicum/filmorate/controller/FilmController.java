@@ -42,14 +42,14 @@ public class FilmController {
         return filmService.getFilms();
     }
 
-    @PutMapping("/{id}/like/{userId}")
-    public void addLike(@PathVariable Long id, @PathVariable Long userId) throws NotFoundException, ValidationException {
+    @PutMapping("/{id}/like/{user_id}")
+    public void addLike(@PathVariable Long id, @PathVariable(name = "user_id") Long userId) throws NotFoundException, ValidationException {
         log.debug("Запрос на установку лайка фильму: filmId={}, userId={}", id, userId);
         filmService.addUserLike(id, userId);
     }
 
-    @DeleteMapping("/{id}/like/{userId}")
-    public void deleteLike(@PathVariable Long id, @PathVariable Long userId) throws NotFoundException, ValidationException {
+    @DeleteMapping("/{id}/like/{user_id}")
+    public void deleteLike(@PathVariable Long id, @PathVariable(name = "user_id") Long userId) throws NotFoundException, ValidationException {
         log.debug("Запрос на снятие лайка фильму: filmId={}, userId={}", id, userId);
         filmService.deleteUserLike(id, userId);
     }

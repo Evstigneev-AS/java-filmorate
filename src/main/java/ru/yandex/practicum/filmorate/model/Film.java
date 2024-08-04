@@ -1,19 +1,25 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Film {
 
-    private Long id;
-    private String name;
-    private String description;
-    private LocalDate releaseDate;
-    private Integer duration;
-    private Set<Long> userLikes = new HashSet<>();
-    private Mpa mpa = new Mpa();
-    private List<Genre> genres = new ArrayList<>();
+    Long id;
+    String name;
+    String description;
+    LocalDate releaseDate;
+    Integer duration;
+    Set<Long> userLikes = new HashSet<>();
+    Mpa mpa = new Mpa();
+    List<Genre> genres = new ArrayList<>();
 }

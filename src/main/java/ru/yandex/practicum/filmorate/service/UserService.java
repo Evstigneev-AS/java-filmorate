@@ -79,13 +79,13 @@ public class UserService {
     private void validate(User user) throws ValidationException {
         log.debug("Валидация пользователя: {}", user);
         if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            throw new ValidationException("Некорректный адрес электронной почты");
+            throw new ValidationException(String.format("Некорректный адрес электронной почты: %s", user.getEmail()));
         }
         if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Некорректный логин пользователя");
+            throw new ValidationException(String.format("Некорректный логин пользователя: %s", user.getLogin()));
         }
         if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Некорректная дата рождения");
+            throw new ValidationException(String.format("Некорректная дата рождения: %s", user.getBirthday()));
         }
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());

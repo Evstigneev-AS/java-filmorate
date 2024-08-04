@@ -100,16 +100,16 @@ public class FilmService {
     private void validate(Film film) throws ValidationException {
         log.debug("Валидация фильма: {}", film);
         if (film.getName() == null || film.getName().isBlank()) {
-            throw new ValidationException("Не заполнено название фильма");
+            throw new ValidationException(String.format("Не заполнено название фильма: %s", film.getName()));
         }
         if (film.getDescription() != null && film.getDescription().length() > 200) {
-            throw new ValidationException("Слишком длинное описание");
+            throw new ValidationException(String.format("Слишком длинное описание: %s", film.getDescription()));
         }
         if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            throw new ValidationException("Некорректная дата релиза");
+            throw new ValidationException(String.format("Некорректная дата релиза: %s", film.getReleaseDate()));
         }
         if (film.getDuration() == null || film.getDuration() <= 0) {
-            throw new ValidationException("Некорректная продолжительность фильма");
+            throw new ValidationException(String.format("Некорректная продолжительность фильма: %s", film.getDuration()));
         }
         if (film.getMpa() != null && film.getMpa().getId() != null) {
             int mpaId = film.getMpa().getId();

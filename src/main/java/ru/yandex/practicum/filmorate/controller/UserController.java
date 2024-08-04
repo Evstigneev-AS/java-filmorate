@@ -42,14 +42,14 @@ public class UserController {
         return userService.getUsers();
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable Long id, @PathVariable Long friendId) throws NotFoundException {
+    @PutMapping("/{id}/friends/{friend_id}")
+    public void addFriend(@PathVariable Long id, @PathVariable(name = "friend_id") Long friendId) throws NotFoundException {
         log.debug("Запрос на добавление в друзья: userId={}, friendId={}", id, friendId);
         userService.addFriend(id, friendId);
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public void deleteFriend(@PathVariable Long id, @PathVariable Long friendId) throws NotFoundException {
+    @DeleteMapping("/{id}/friends/{friend_id}")
+    public void deleteFriend(@PathVariable Long id, @PathVariable(name = "friend_id") Long friendId) throws NotFoundException {
         log.debug("Запрос на удаление из друзей: userId={}, friendId={}", id, friendId);
         userService.deleteFriend(id, friendId);
     }
@@ -60,8 +60,8 @@ public class UserController {
         return userService.getFriends(id);
     }
 
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) throws NotFoundException {
+    @GetMapping("/{id}/friends/common/{other_id}")
+    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable(name = "other_id") Long otherId) throws NotFoundException {
         log.debug("Запрос на получение списка общих друзей: userId={}, otherId={}", id, otherId);
         return userService.getCommonFriends(id, otherId);
     }
