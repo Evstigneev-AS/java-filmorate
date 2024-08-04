@@ -1,92 +1,69 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import jakarta.validation.ValidationException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
-@Slf4j
-@Component
-@Primary
+
+@Component("InMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
-    private final Map<Long, Film> films = new HashMap<>();
+    private Long lastId = 0L;
+    private final Map<Long, Film> filmsList = new HashMap<>();
 
     @Override
-    public Collection<Film> findAll() {
-        return films.values();
+    public List<Film> getFilmsList() {
+        return new ArrayList<>(filmsList.values());
     }
 
     @Override
-    public Optional<Film> findById(long filmId) {
-        return Optional.ofNullable(films.get(filmId));
-    }
-
-    @Override
-    public Film create(Film film) {
-        validateFilm(film);
-        film.setId(getNextId());
-        if (film.getLikes() == null) {
-            film.setLikes(new HashSet<>());
-        }
-        films.put(film.getId(), film);
+    public Film addFilm(Film film) {
+        film.setId(++lastId);
+        filmsList.put(film.getId(), film);
         return film;
     }
 
     @Override
-    public Film update(Film newFilm) {
-        validateFilm(newFilm);
-        films.put(newFilm.getId(), newFilm);
-        return newFilm;
+    public Film updateFilm(Film film) {
+        if (!filmsList.containsKey(film.getId())) {
+            return null;
+        }
+        filmsList.put(film.getId(), film);
+        return film;
     }
 
     @Override
-    public void remove(long filmId) {
-        films.remove(filmId);
+    public Film getFilm(Long id) {
+        return filmsList.get(id);
     }
 
     @Override
-    public List<Film> findPopularFilm(Comparator<Film> comparator, long count) {
-        return films.values().stream()
-                .sorted(comparator)
-                .limit(count)
-                .toList();
+    public void addUserLike(Long filmId, Long userId) {
+        Film film = getFilm(filmId);
+        film.getUserLikes().add(userId);
+        updateFilm(film);
     }
 
-    public void validateFilm(Film film) {
-        if (film.getDescription() == null || film.getDescription().isBlank()) {
-            log.error("Invalid description: {}", film.getDescription());
-            throw new NotFoundException("Описание не может быть пустым");
-        }
-        if (film.getName() == null || film.getName().isBlank()) {
-            log.error("Invalid name: {}", film.getName());
-            throw new ValidationException("Название не может быть пустым");
-        }
-        if (film.getDescription().length() > 200) {
-            log.error("Description too long: {}", film.getDescription().length());
-            throw new ValidationException("Максимальная длина описания — 200 символов");
-        }
-        LocalDate earliestReleaseDate = LocalDate.of(1895, 12, 28);
-        if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(earliestReleaseDate)) {
-            log.error("Invalid release date: {}", film.getReleaseDate());
-            throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
-        }
-        if (film.getDuration() == null || film.getDuration().isNegative() || film.getDuration().isZero()) {
-            log.error("Invalid duration: {}", film.getDuration());
-            throw new ValidationException("Продолжительность фильма должна быть положительным числом");
-        }
+    @Override
+    public void deleteUserLike(Long filmId, Long userId) {
+        Film film = getFilm(filmId);
+        film.getUserLikes().remove(userId);
+        updateFilm(film);
     }
 
-    private long getNextId() {
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @Override
+    public List<Film> getPopular(Integer count) {
+        return
+                getFilmsList().stream()
+                        .sorted((f1, f2) -> Integer.compare(f2.getUserLikes().size(), f1.getUserLikes().size()))
+                        .limit(count)
+                        .collect(Collectors.toList());
     }
+
+    @Override
+    public Set<Long> getLikes(Long filmId) {
+        return null;
+    }
+
 }

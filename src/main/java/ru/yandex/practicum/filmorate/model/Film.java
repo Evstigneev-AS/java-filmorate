@@ -1,40 +1,25 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
-import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-/**
- * Film.
- */
 @Data
-@Builder(toBuilder = true)
-@EqualsAndHashCode(of = {"name", "releaseDate"})
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Film {
 
-    private Long id;
-    private String name;
-    private String description;
-    private LocalDate releaseDate;
-    private Duration duration;
-    private Set<Long> likes;
-
-    @JsonIgnore
-    public int getLikesCount() {
-        return likes.size();
-    }
-
-    @JsonProperty("duration")
-    public long getDurationInSeconds() {
-        return duration != null ? duration.getSeconds() : 0;
-    }
-
-    @JsonProperty("duration")
-    public void setDurationInSeconds(long durationInSeconds) {
-        this.duration = Duration.ofSeconds(durationInSeconds);
-    }
+    Long id;
+    String name;
+    String description;
+    LocalDate releaseDate;
+    Integer duration;
+    Set<Long> userLikes = new HashSet<>();
+    Mpa mpa = new Mpa();
+    List<Genre> genres = new ArrayList<>();
 }

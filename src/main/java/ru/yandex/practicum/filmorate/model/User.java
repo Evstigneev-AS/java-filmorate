@@ -1,24 +1,23 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.Builder;
+import lombok.AccessLevel;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+//import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
-/**
- * User.
- */
 @Data
-@Builder(toBuilder = true)
-@EqualsAndHashCode(of = {"email"})
+@FieldDefaults(level = AccessLevel.PRIVATE)
+//@EqualsAndHashCode(of = {"email"})
 public class User {
 
-    private Long id;
-    private String email;
-    private String login;
-    private String name;
-    private LocalDate birthday;
-    private Set<Long> friends;
+    Long id;
+    String email;
+    String login;
+    String name;
+    LocalDate birthday;
+    Set<Long> friends = new HashSet<>();
 }
