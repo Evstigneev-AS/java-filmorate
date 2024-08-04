@@ -1,77 +1,85 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
-import jakarta.validation.ValidationException;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDate;
 import java.util.*;
 
-@Slf4j
-@Component
-@Primary
+@Component("InMemoryUserStorage")
+
 public class InMemoryUserStorage implements UserStorage {
 
-    private final Map<Long, User> users = new HashMap<>();
+    private Long lastId;
+    final Map<Long, User> usersList;
 
-    @Override
-    public List<User> findAll() {
-        return List.copyOf(users.values());
+    public InMemoryUserStorage() {
+        lastId = 0L;
+        usersList = new HashMap<>();
     }
 
     @Override
-    public Optional<User> findById(long userId) {
-        return Optional.ofNullable(users.get(userId));
+    public List<User> getUsersList() {
+        return new ArrayList<>(usersList.values());
     }
 
     @Override
-    public void remove(long userId) {
-        users.remove(userId);
-    }
-
-    @Override
-    public User create(User user) {
-        validateUser(user);
-        user.setId(getNextId());
-        if (user.getFriends() == null) {
-            user.setFriends(new HashSet<>());
-        }
-        users.put(user.getId(), user);
+    public User addUser(User user) {
+        user.setId(++lastId);
+        usersList.put(user.getId(), user);
         return user;
     }
 
     @Override
-    public User update(User newUser) {
-        validateUser(newUser);
-        users.put(newUser.getId(), newUser);
-        return newUser;
+    public User updateUser(User user) {
+        if (!usersList.containsKey(user.getId())) {
+            return null;
+        }
+
+        usersList.put(user.getId(), user);
+        return user;
     }
 
-    @SneakyThrows
-    public void validateUser(User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            log.error("Invalid email: {}", user.getEmail());
-            throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
-        }
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            log.error("Invalid login: {}", user.getLogin());
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
-        }
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Invalid birthday: {}", user.getBirthday());
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
+    @Override
+    public User getUser(Long id) {
+        return usersList.get(id);
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+        User user = getUser(userId);
+        User friend = getUser(friendId);
+        user.getFriends().add(friendId);
+        friend.getFriends().add(userId);
+    }
+
+    @Override
+    public void removeFriend(Long userId, Long friendId) {
+        User user = getUser(userId);
+        User friend = getUser(friendId);
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(userId);
+    }
+
+    @Override
+    public List<User> getFriends(Long userId) {
+        User user = getUser(userId);
+        List<User> users = new ArrayList<>();
+        for (Long id : user.getFriends()) {
+            users.add(getUser(id));
+        }
+        return users;
+    }
+
+    @Override
+    public List<User> getCommonFriends(Long userId, Long otherId) {
+        Set<Long> friends1 = getUser(userId).getFriends();
+        Set<Long> friends2 = getUser(otherId).getFriends();
+        List<User> list = new ArrayList<>();
+        for (Long id : friends1) {
+            if (friends2.contains(id)) {
+                list.add(getUser(id));
+            }
+        }
+        return list;
     }
 }

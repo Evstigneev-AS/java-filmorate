@@ -1,207 +1,94 @@
 package ru.yandex.practicum.filmorate.service;
 
+import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.patern.LoggerMessagePattern;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.*;
+import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
 public class UserService {
 
-    private final UserStorage userStorage;
-
     @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
+    @Qualifier("dbUserStorage")
+    private UserStorage userStorage;
+
+    public User addUser(User user) throws ValidationException {
+        log.debug("Запрос на создание нового пользователя: {}", user);
+        validate(user);
+        return userStorage.addUser(user);
     }
 
-    public List<User> findAll() {
-        return userStorage.findAll();
-    }
-
-    public User findById(long id) {
-        Optional<User> userOptional = userStorage.findById(id);
-        if (userOptional.isEmpty()) {
-            throw new NotFoundException("Пользователь c id:" + id + " не найден");
+    public User updateUser(User user) throws ValidationException, NotFoundException {
+        log.debug("Запрос на изменение пользователя: {}", user);
+        validate(user);
+        User dbUser = userStorage.updateUser(user);
+        if (dbUser == null) {
+            log.info("Пользователь с указанным ID {} не найден", user.getId());
+            throw new NotFoundException(String.format("Пользователь с указанным ID (%d) не найден", user.getId()));
         }
-        return userOptional.get();
+        return dbUser;
     }
 
-    public User create(User user) {
-        log.debug(LoggerMessagePattern.DEBUG, "create", user);
-        try {
-            String email = user.getEmail();
-            if (findUserByIdEmail(email).isPresent()) {
-                throw new DuplicatedDataException("Этот email:" + email + " уже используется");
-            }
-
-            if (user.getName() == null || user.getName().isBlank()) {
-                user.setName(user.getLogin());
-            }
-            return userStorage.create(user);
-        } catch (Exception e) {
-            log.warn(LoggerMessagePattern.WARN, "create", user, e.getMessage(), e.getClass());
-            throw e;
+    public User getUser(Long id) throws NotFoundException {
+        User user = userStorage.getUser(id);
+        if (user == null) {
+            throw new NotFoundException(String.format("Пользователь с указанным ID (%d) не найден", id));
         }
+        return user;
     }
 
-    public User update(User newUser) {
-        log.debug(LoggerMessagePattern.DEBUG, "update", newUser);
-        try {
-            Long id = newUser.getId();
-            Optional<User> oldUserOptional = userStorage.findById(id);
-            if (oldUserOptional.isEmpty()) {
-                throw new NotFoundException("Пользователь c id:" + id + " не найден");
-            }
-            fillEmptyFields(newUser, oldUserOptional.get());
-            String email = newUser.getEmail();
-            Optional<User> userWithSameEmail = findUserByIdEmail(newUser.getEmail());
-            if (userWithSameEmail.isPresent() && !Objects.equals(userWithSameEmail.get().getId(), newUser.getId())) {
-                throw new DuplicatedDataException("Этот email:" + email + " уже используется");
-            }
-            return userStorage.update(newUser);
-        } catch (Exception e) {
-            log.warn(LoggerMessagePattern.WARN, "update", newUser, e.getMessage(), e.getClass());
-            throw e;
-        }
+    public List<User> getUsers() {
+        return userStorage.getUsersList();
     }
 
-    private static void fillEmptyFields(User target, User source) {
-        if (target.getName() == null) {
-            target.setName(source.getName());
-        }
-        if (target.getLogin() == null) {
-            target.setLogin(source.getLogin());
-        }
-        if (target.getEmail() == null) {
-            target.setEmail(source.getEmail());
-        }
-        if (target.getBirthday() == null) {
-            target.setBirthday(source.getBirthday());
-        }
-        target.setFriends(source.getFriends());
+    public void addFriend(Long userId, Long friendId) throws NotFoundException {
+        log.debug("Запрос на добавление в друзья: userId={}, friendId={}", userId, friendId);
+        getUser(userId);
+        getUser(friendId);
+        userStorage.addFriend(userId, friendId);
     }
 
-    private Optional<User> findUserByIdEmail(String email) {
-        return userStorage.findAll().stream()
-                .filter(user -> user.getEmail().equals(email))
-                .findFirst();
+    public void deleteFriend(Long userId, Long friendId) throws NotFoundException {
+        log.debug("Запрос на удаление из друзей: userId={}, friendId={}", userId, friendId);
+        getUser(userId);
+        getUser(friendId);
+        userStorage.removeFriend(userId, friendId);
     }
 
-    public List<User> findFriends(long id) {
-        log.debug(LoggerMessagePattern.DEBUG, "find friends", "userId=%d".formatted(id));
-        try {
-            Optional<User> userOptional = userStorage.findById(id);
-            if (userOptional.isEmpty()) {
-                throw new NotFoundException("Пользователь c id:" + id + " не найден");
-            }
+    public List<User> getFriends(Long userId) throws NotFoundException {
+        log.debug("Запрос на получение списка друзей пользователя: userId={}", userId);
+        getUser(userId);
+        return userStorage.getFriends(userId);
+    }
 
-            Set<Long> friends = userOptional.get().getFriends();
-            return findByIds(friends);
-        } catch (Exception e) {
-            log.warn(LoggerMessagePattern.WARN, "find friends", "userId=%d".formatted(id), e.getMessage(), e.getClass()
-            );
-            throw e;
+    public List<User> getCommonFriends(Long userId, Long otherId) throws NotFoundException {
+        log.debug("Запрос на получение списка общих друзей: userId={}, otherId={}", userId, otherId);
+        getUser(userId);
+        getUser(otherId);
+        return userStorage.getCommonFriends(userId, otherId);
+    }
+
+    private void validate(User user) throws ValidationException {
+        log.debug("Валидация пользователя: {}", user);
+        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
+            throw new ValidationException("Некорректный адрес электронной почты");
         }
-    }
-
-    public List<User> findCommonFriends(long id1, long id2) {
-        log.debug(LoggerMessagePattern.DEBUG, "find common friends", "users %d and %d".formatted(id1, id2));
-        try {
-            Optional<User> userOptional1 = userStorage.findById(id1);
-            Optional<User> userOptional2 = userStorage.findById(id2);
-            if (userOptional1.isEmpty() || userOptional2.isEmpty()) {
-                throw new NotFoundException("Пользователи с id:" + id1 + ", " + id2 + " не найдены");
-            }
-
-            Set<Long> friends1 = userOptional1.get().getFriends();
-            Set<Long> friends2 = userOptional2.get().getFriends();
-
-            Set<Long> commonFriends = new HashSet<>(friends1);
-            commonFriends.retainAll(friends2);
-            return findByIds(commonFriends);
-        } catch (Exception e) {
-            log.warn(LoggerMessagePattern.WARN, "find common friends", "users %d and %d".formatted(id1, id2),
-                    e.getMessage(), e.getClass());
-            throw e;
+        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
+            throw new ValidationException("Некорректный логин пользователя");
         }
-    }
-
-    public List<User> findByIds(Collection<Long> ids) {
-        return userStorage.findAll().stream()
-                .filter(user -> ids.contains(user.getId()))
-                .toList();
-    }
-
-    public void remove(long id) {
-        log.debug(LoggerMessagePattern.DEBUG, "remove", "id=%d".formatted(id));
-        try {
-            if (userStorage.findById(id).isEmpty()) {
-                throw new NotFoundException("Пользователь c id:" + id + " не найден");
-            }
-            userStorage.remove(id);
-        } catch (Exception e) {
-            log.warn(LoggerMessagePattern.WARN, "remove", "id=%d".formatted(id), e.getMessage(), e.getClass());
-            throw e;
+        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException("Некорректная дата рождения");
         }
-    }
-
-    public User addFriend(long userId, long friendId) {
-        log.debug(LoggerMessagePattern.DEBUG, "add friend", "userId=%d, friendId=%d"
-                .formatted(userId, friendId));
-        try {
-            Optional<User> userOptional = userStorage.findById(userId);
-            Optional<User> friendOptional = userStorage.findById(friendId);
-            if (userOptional.isEmpty() || friendOptional.isEmpty()) {
-                throw new NotFoundException("Пользователи с id:" + userId + ", " + friendId + " не найдены");
-            }
-
-            User user = userOptional.get();
-            User friend = friendOptional.get();
-
-            if (user.getFriends().contains(friendId)) {
-                throw new DuplicatedDataException("Пользователь #%d ранее добавлен в список друзей"
-                        .formatted(friendId));
-            }
-
-            user.getFriends().add(friendId);
-            friend.getFriends().add(userId);
-
-            return user;
-        } catch (Exception e) {
-            log.warn(LoggerMessagePattern.WARN, "add friend", "userId=%d, friendId=%d".formatted(userId, friendId),
-                    e.getMessage(), e.getClass());
-            throw e;
-        }
-    }
-
-    public User removeFriend(long userId, long friendId) {
-        log.debug(LoggerMessagePattern.DEBUG, "delete friend", "userId=%d, friendId=%d".formatted(userId, friendId));
-        try {
-            Optional<User> userOptional = userStorage.findById(userId);
-            Optional<User> friendOptional = userStorage.findById(friendId);
-            if (userOptional.isEmpty() || friendOptional.isEmpty()) {
-                throw new NotFoundException("Пользователи с id:" + userId + ", " + friendId + " не найдены");
-            }
-
-            User user = userOptional.get();
-            user.getFriends().remove(friendId);
-
-            User friend = friendOptional.get();
-            friend.getFriends().remove(userId);
-
-            return user;
-        } catch (Exception e) {
-            log.warn(LoggerMessagePattern.WARN, "delete friend", "userId=%d, friendId=%d".formatted(userId, friendId),
-                    e.getMessage(), e.getClass());
-            throw e;
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
         }
     }
 }
