@@ -2,4 +2,4 @@
 
 ## Описание базы данных
 
-![Схема БД](/home/anatolii/IdeaProjects/java-filmorate/ER-diagram.pdf)
+![Схема БД](ER-diagram.jpg)
